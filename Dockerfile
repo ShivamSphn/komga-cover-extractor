@@ -83,12 +83,9 @@ VOLUME ["/app/config", "/app/data"]
 
 # Copy installed packages and application from builder
 COPY --from=builder /build /app
-COPY --from=builder /usr/local/lib/python${PYTHON_VERSION}/site-packages /usr/local/lib/python${PYTHON_VERSION}/site-packages
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 
-# Set secure permissions
-RUN find /app -type d -exec chmod 755 {} \; && \
-    find /app -type f -exec chmod 644 {} \; && \
-    chmod 755 /app/start.sh
+RUN chmod 755 /app/start.sh
 
 # Set correct ownership
 RUN chown -R appuser:appuser /app
