@@ -30,6 +30,7 @@ dependencies = [
     "pyppmd==1.1.0",
     "pywavelets==1.7.0",
     "pyzstd==0.16.2",
+    "qbittorrent-api==2024.9.67",
     "rarfile==4.2",
     "regex==2024.9.11",
     "requests==2.32.3",

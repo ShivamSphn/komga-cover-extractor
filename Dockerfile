@@ -1,9 +1,9 @@
 # Use a specific version of the Python image
-FROM python:3.11.4-slim-bookworm
+FROM python:3.13-slim-bookworm
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Set the working directory to /app
 WORKDIR /app
-
 # Create a new user called "appuser"
 RUN useradd -m appuser
 
@@ -13,7 +13,7 @@ ARG PGID=1000
 
 # Set the PYTHONUNBUFFERED environment variable to avoid partial output in logs
 ENV PYTHONUNBUFFERED=1
-
+ENV UV_COMPILE_BYTECODE=1
 # Add non-free to sources.list
 RUN echo "deb http://deb.debian.org/debian bullseye non-free" >> /etc/apt/sources.list
 
@@ -30,7 +30,8 @@ COPY --chown=appuser:appuser . .
 # Install necessary packages and requirements for the main script
 RUN apt-get update
 RUN apt-get install -y unrar tzdata nano
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN uv sync --frozen
+# RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Install the requirements for the qbit_torrent_unchecker addon
 RUN pip3 install --no-cache-dir -r /app/addons/qbit_torrent_unchecker/requirements.txt
@@ -66,4 +67,4 @@ RUN rm -rf /var/lib/apt/lists/*
 USER appuser
 
 # Run the addon script in the background and redirect the output to a log file, then run the main script in the foreground.
-CMD python3 /app/addons/qbit_torrent_unchecker/qbit_torrent_unchecker.py --paths="$PATHS" --download_folders="$DOWNLOAD_FOLDERS" > /dev/null 2>&1 & python3 -u komga_cover_extractor.py --paths="$PATHS" --download_folders="$DOWNLOAD_FOLDERS" --webhook="$WEBHOOK" --bookwalker_check="$BOOKWALKER_CHECK" --compress="$COMPRESS" --compress_quality="$COMPRESS_QUALITY" --bookwalker_webhook_urls="$BOOKWALKER_WEBHOOK_URLS" --watchdog="$WATCHDOG" --watchdog_discover_new_files_check_interval="$WATCHDOG_DISCOVER_NEW_FILES_CHECK_INTERVAL" --watchdog_file_transferred_check_interval="$WATCHDOG_FILE_TRANSFERRED_CHECK_INTERVAL" --output_covers_as_webp="$OUTPUT_COVERS_AS_WEBP" --new_volume_webhook="$NEW_VOLUME_WEBHOOK"
+CMD uv run python3 /app/addons/qbit_torrent_unchecker/qbit_torrent_unchecker.py --paths="$PATHS" --download_folders="$DOWNLOAD_FOLDERS" > /dev/null 2>&1 & python3 -u komga_cover_extractor.py --paths="$PATHS" --download_folders="$DOWNLOAD_FOLDERS" --webhook="$WEBHOOK" --bookwalker_check="$BOOKWALKER_CHECK" --compress="$COMPRESS" --compress_quality="$COMPRESS_QUALITY" --bookwalker_webhook_urls="$BOOKWALKER_WEBHOOK_URLS" --watchdog="$WATCHDOG" --watchdog_discover_new_files_check_interval="$WATCHDOG_DISCOVER_NEW_FILES_CHECK_INTERVAL" --watchdog_file_transferred_check_interval="$WATCHDOG_FILE_TRANSFERRED_CHECK_INTERVAL" --output_covers_as_webp="$OUTPUT_COVERS_AS_WEBP" --new_volume_webhook="$NEW_VOLUME_WEBHOOK"
