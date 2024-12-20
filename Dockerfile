@@ -30,12 +30,8 @@ COPY --chown=appuser:appuser . .
 # Install necessary packages and requirements for the main script
 RUN apt-get update
 RUN apt-get install -y unrar tzdata nano
+RUN apt-get install -y build-essential
 RUN uv sync --frozen
-# RUN pip3 install --no-cache-dir -r requirements.txt
-
-# Install the requirements for the qbit_torrent_unchecker addon
-RUN pip3 install --no-cache-dir -r /app/addons/qbit_torrent_unchecker/requirements.txt
-
 # # Install the optional addon feature manga_isbn if true
 ARG MANGA_ISBN
 RUN if [ "$MANGA_ISBN" = "true" ]; then \
@@ -63,8 +59,11 @@ RUN if [ "$EPUB_CONVERTER" = "true" ]; then \
 RUN apt-get autoremove -y
 RUN rm -rf /var/lib/apt/lists/*
 
+# Make start.sh executable
+RUN chmod +x start.sh
+
 # Switch to "appuser"
 USER appuser
 
-# Run the addon script in the background and redirect the output to a log file, then run the main script in the foreground.
-CMD uv run python3 /app/addons/qbit_torrent_unchecker/qbit_torrent_unchecker.py --paths="$PATHS" --download_folders="$DOWNLOAD_FOLDERS" > /dev/null 2>&1 & uv run python3 -u komga_cover_extractor.py --paths="$PATHS" --download_folders="$DOWNLOAD_FOLDERS" --webhook="$WEBHOOK" --bookwalker_check="$BOOKWALKER_CHECK" --compress="$COMPRESS" --compress_quality="$COMPRESS_QUALITY" --bookwalker_webhook_urls="$BOOKWALKER_WEBHOOK_URLS" --watchdog="$WATCHDOG" --watchdog_discover_new_files_check_interval="$WATCHDOG_DISCOVER_NEW_FILES_CHECK_INTERVAL" --watchdog_file_transferred_check_interval="$WATCHDOG_FILE_TRANSFERRED_CHECK_INTERVAL" --output_covers_as_webp="$OUTPUT_COVERS_AS_WEBP" --new_volume_webhook="$NEW_VOLUME_WEBHOOK"
+# Run start.sh which handles environment variable display and script execution
+CMD ["./start.sh"]
